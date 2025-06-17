@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Should I Go Outside?</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(to bottom right, #d0eaff, #ffffff);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .container {
+      background: #ffffff;
+      padding: 2rem 3rem;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      max-width: 450px;
+      width: 100%;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+      color: #333;
+    }
+
+    #result {
+      margin-top: 1rem;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #verdict {
+      font-size: 1.4rem;
+      margin-bottom: 0.5rem;
+      color: #222;
+    }
+
+    #weatherDetails {
+      font-size: 1rem;
+      color: #666;
+    }
+
+    #manualInput {
+      margin-top: 1rem;
+    }
+
+    input {
+      padding: 0.5rem;
+      width: 80%;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-top: 0.5rem;
+    }
+
+    button {
+      margin-top: 0.7rem;
+      padding: 0.6rem 1rem;
+      background-color: #0099ff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #007acc;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Should I Go Outside Today?</h1>
+
+    <div id="result" class="hidden">
+      <h2 id="verdict">Loading...</h2>
+      <p id="weatherDetails"></p>
+    </div>
+
+    <div id="manualInput">
+      <p>If location access fails, enter your city below:</p>
+      <input type="text" id="cityInput" placeholder="Enter city name">
+      <br />
+      <button onclick="getWeatherByCity()">Check Weather</button>
+    </div>
+  </div>
+
+  <script>
+    const API_KEY = 'ec1953efc7e5ae8c9353289ce6c8cf5a'; // Replace with your actual OpenWeatherMap key
+    const verdictEl = document.getElementById('verdict');
+    const weatherDetailsEl = document.getElementById('weatherDetails');
+    const resultDiv = document.getElementById('result');
+
+    function showResult(verdict, details) {
+      verdictEl.textContent = verdict;
+      weatherDetailsEl.textContent = details;
+      resultDiv.classList.remove('hidden');
+    }
+
+    function getWeather(lat, lon) {
+  fetch(
+    `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
+  )
+    .then(res => res.json())
+    .then(data => {
+      if (data.cod !== 200) {
+        throw new Error(data.message || "Failed to fetch weather.");
+      }
+      displayWeather(data);
+    })
+    .catch(err => showResult("Couldn't fetch weather.", err.message));
+}
+
+function getWeatherByCity() {
+  const city = document.getElementById('cityInput').value.trim();
+  if (!city) return;
+  fetch(
+    `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`
+  )
+    .then(res => res.json())
+    .then(data => {
+      if (data.cod !== 200) {
+        throw new Error(data.message || "City not found.");
+      }
+      displayWeather(data);
+    })
+    .catch(err => showResult("Couldn't fetch weather.", err.message));
+}
+
+
+    function displayWeather(data) {
+      const weather = data.weather[0].main;
+      const temp = data.main.temp;
+      const city = data.name;
+
+      let verdict = '';
+      if (['Rain', 'Thunderstorm', 'Drizzle'].includes(weather)) {
+        verdict = '☔ Nope. Take an umbrella or stay in!';
+      } else if (weather === 'Clear') {
+        verdict = '☀️ Yes! Go enjoy the sunshine!';
+      } else if (weather === 'Snow') {
+        verdict = '❄️ Snow alert! Bundle up first.';
+      } else {
+        verdict = '🌥️ Maybe... looks okay-ish.';
+      }
+
+      showResult(verdict, `Current weather in ${city}: ${weather}, ${temp}°C`);
+    }
+
+    function getLocation() {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          pos => getWeather(pos.coords.latitude, pos.coords.longitude),
+          err => showResult("Location access denied ❌", err.message)
+        );
+      } else {
+        showResult("Geolocation not supported 😢", "Try entering your city manually.");
+      }
+    }
+
+    window.onload = getLocation;
+  </script>
+</body>
+</html>
