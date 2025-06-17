@@ -4,8 +4,7 @@ const resultDiv = document.getElementById('result');
 const verdictEl = document.getElementById('verdict');
 const weatherDetailsEl = document.getElementById('weatherDetails');
 
-const API_KEY = '5df6be9063f048b9c7c6533dcc46e333
-'; // Replace with your actual OpenWeatherMap API key
+const API_KEY = ''; // Replace with your actual OpenWeatherMap API key
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
